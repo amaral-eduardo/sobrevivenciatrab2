@@ -10,3 +10,6 @@ require(hnp)
 require(ggplot2)
 require(survminer)
 require(parmsurvfit)
+
+
+teste 2
