@@ -11,3 +11,6 @@ require(ggplot2)
 require(survminer)
 require(parmsurvfit)
 
+teste 2
+
+teste 3
