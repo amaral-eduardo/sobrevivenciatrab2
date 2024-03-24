@@ -74,3 +74,7 @@ fit9 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, 
 fit1$AIC; fit2$AIC; fit3$AIC; fit4$AIC; fit5$AIC; fit6$AIC; fit7$AIC; fit8$AIC; fit9$AIC
 
 # Retirar sexo?
+
+
+
+
