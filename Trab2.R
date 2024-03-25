@@ -86,17 +86,16 @@ fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, 
 
 fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='genf')
 
-fit9 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='exp')
 
-fit1$AIC; fit2$AIC; fit3$AIC; fit4$AIC; fit5$AIC; fit6$AIC; fit7$AIC; fit8$AIC; fit9$AIC
+# fit1$AIC; fit2$AIC; fit3$AIC; fit4$AIC; fit5$AIC; fit6$AIC; fit7$AIC; fit8$AIC; fit9$AIC
 
 # Retirar sexo?
 
 
 aic_bic_valores <- data.frame(
-  Modelo = c("Exponential", "Weibull", "Gamma", "Log-Normal", "Log-Logistic", "Gompertz", "Generalized Gamma", "Generalized F", "Exponential 2"),
-  AIC = c(AIC(fit1), AIC(fit2), AIC(fit3), AIC(fit4), AIC(fit5), AIC(fit6), AIC(fit7), AIC(fit8), AIC(fit9)),
-  BIC = c(BIC(fit1), BIC(fit2), BIC(fit3), BIC(fit4), BIC(fit5), BIC(fit6), BIC(fit7), BIC(fit8), BIC(fit9))
+  Modelo = c("Exponential", "Weibull", "Gamma", "Log-Normal", "Log-Logistic", "Gompertz", "Generalized Gamma", "Generalized F"),
+  AIC = c(AIC(fit1), AIC(fit2), AIC(fit3), AIC(fit4), AIC(fit5), AIC(fit6), AIC(fit7), AIC(fit8)),
+  BIC = c(BIC(fit1), BIC(fit2), BIC(fit3), BIC(fit4), BIC(fit5), BIC(fit6), BIC(fit7), BIC(fit8))
 )
 
 pander(aic_bic_valores)
