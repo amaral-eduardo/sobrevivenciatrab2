@@ -1,3 +1,9 @@
+---
+title: ''
+output: pdf_document
+---
+
+```{r}
 # Leitura dos dados -------------------------------------------------------
 dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
 head(dados)
@@ -205,3 +211,4 @@ TRV(fit_SEM_sexo, fit_COM_idade)
 
 AIC(fit4)
 AIC(fit_COM_idade)
+```
