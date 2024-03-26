@@ -70,22 +70,23 @@ legend('bottomleft', title='Leucopenia', c("Sim","Não"), col=1:3, lwd=2, bty='n
 km1; km2; km3; km4; km5
 
 # Regressão ---------------------------------------------------------------
-fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='exponential')
+fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='exponential')
 
-fit2 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='weibull')
+fit2 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='weibull')
 
-fit3 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='gamma')
+fit3 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gamma')
 
-fit4 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='lnorm')
+fit4 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
 
-fit5 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='llogis')
+fit5 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='llogis')
 
-fit6 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='gompertz')
+fit6 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
 
-fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='gengamma')
+fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
 
-fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='genf')
+fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='genf')
 
+fit7
 
 # fit1$AIC; fit2$AIC; fit3$AIC; fit4$AIC; fit5$AIC; fit6$AIC; fit7$AIC; fit8$AIC; fit9$AIC
 
@@ -99,9 +100,6 @@ aic_bic_valores <- data.frame(
 )
 
 pander(aic_bic_valores)
-
-
-
 
 s1 <- c() ; s2 <- c() 
 
@@ -200,8 +198,6 @@ fit_SEM_sexo = flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia
 fit_COM_idade = flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
 
 TRV(fit_SEM_sexo, fit_COM_idade)
-
-
 
 AIC(fit4)
 AIC(fit_COM_idade)
