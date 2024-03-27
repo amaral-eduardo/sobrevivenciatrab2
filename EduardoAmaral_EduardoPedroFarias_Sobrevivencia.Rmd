@@ -306,7 +306,7 @@ hnp(r3, main='3', print.on=T, half=F, pch=16)
 hnp(r5, main='5', print.on=T, half=F, pch=16)
 ```
 
-
+teste
 
 
 
