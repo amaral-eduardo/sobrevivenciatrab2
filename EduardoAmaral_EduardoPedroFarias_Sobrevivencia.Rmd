@@ -223,6 +223,7 @@ TRV(fit_SEM_sexo, fit_COM_idade)
 
 AIC(fit4)
 AIC(fit_COM_idade)
+
 ```
 
 
@@ -242,6 +243,68 @@ fit_lnorm
 
 ```
 
+```{r}
+teste = fit.cure.model(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade,
+                       data=dados, 
+                       dist='lognormal', 
+                       formula.surv=list(~gptumor), 
+                       type='mixture', 
+                       link='logit')
+
+
+AIC(teste)
+summary(teste)
+
+table(dados$gptumor)
+```
+
+```{r}
+
+#“surv”, “curerate”, “probcure”, “survuncured”, “hazarduncured”, “cumhazuncured”, “densityuncured”, “failuncured”, “oddsuncured”, “loghazarduncured”, “hazard”, “density”, “fail”, “loghazard”, “odds”, “cumhaz”
+predict(teste, newdata=data.frame(group=c('Mtx', 'Loco', 'Hemato')), type='curerate')
+
+dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
+
+teste = fit.cure.model(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade,
+                       data=dados, 
+                       dist='lognormal', 
+                       formula.surv=list(~gptumor), 
+                       type='mixture', 
+                       link='logit')
+
+summary(teste)
+
+s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c()
+
+for(i in 1:nrow(dados)) {
+  # Incluir todas as variáveis necessárias para a previsão
+  new_data <- data.frame(
+    gptumor = dados$gptumor[i],
+    desnut = dados$desnut[i],
+    comorbi = dados$comorbi[i],
+    leucopenia = dados$leucopenia[i],
+    idade = dados$idade[i]
+  )
+  
+  s1[i] <- predict(teste, newdata=new_data, time=dados$tempo[i])[[1]]$Estimate
+  #if(i %% 10 == 0) print(i)
+}
+
+a1 <- runif(length(s1), min=0, max=s1)
+r1 <- ifelse(dados$status==1, qnorm(s1), qnorm(a1))
+
+1-exp(-0.0269800)
+
+
+
+require(hnp)
+X11()
+par(mfrow=c(2,2))
+hnp(r1, main='1', print.on=T, half=F, pch=16)
+hnp(r2, main='2', print.on=T, half=F, pch=16)    
+hnp(r3, main='3', print.on=T, half=F, pch=16)
+hnp(r5, main='5', print.on=T, half=F, pch=16)
+```
 
 
 
