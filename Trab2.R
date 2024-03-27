@@ -46,28 +46,36 @@ summary(dados)
 
 str(dados)
 
+dados$idade_c <- ifelse(dados$idade <= 60, 0, 1)
+
 # Descritiva --------------------------------------------------------------
+par(mfrow=c(1,1))
+
 km1 <- survfit(Surv(tempo, status)~gptumor, dados)
 plot(km1, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Tumores', c("Loco", "Mtx", "Hemato"), col=1:3, lwd=2, bty='n')
+legend('topright', title='Tumores', c("Loco", "Mtx", "Hemato"), col=1:3, lwd=2, bty='n')
 
 km2 <- survfit(Surv(tempo, status)~sexo, dados)
 plot(km2, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:2)
-legend('bottomleft', title='Sexo', c("Mas","Fem"), col=1:2, lwd=2, bty='n')
+legend('topright', title='Sexo', c("Mas","Fem"), col=1:2, lwd=2, bty='n')
 
 km3 <- survfit(Surv(tempo, status)~desnut, dados)
-plot(km3, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Desnutricao', c("Sim","Não"), col=1:3, lwd=2, bty='n')
+plot(km3, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:2)
+legend('topright', title='Desnutricao', c("Sim","Não"), col=1:2, lwd=2, bty='n')
 
 km4 <- survfit(Surv(tempo, status)~comorbi, dados)
-plot(km4, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Comorbidade', c("Sim","Não"), col=1:3, lwd=2, bty='n')
+plot(km4, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:2)
+legend('topright', title='Comorbidade', c("Sim","Não"), col=1:2, lwd=2, bty='n')
 
 km5 <- survfit(Surv(tempo, status)~leucopenia, dados)
-plot(km5, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Leucopenia', c("Sim","Não"), col=1:3, lwd=2, bty='n')
+plot(km5, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:2)
+legend('topright', title='Leucopenia', c("Sim","Não"), col=1:2, lwd=2, bty='n')
 
-km1; km2; km3; km4; km5
+km6 <- survfit(Surv(tempo, status)~idade_c, dados)
+plot(km6, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:2)
+legend('topright', title='Idade', c("<= 60","> 60"), col=1:2, lwd=2, bty='n')
+
+km1; km2; km3; km4; km5; km6
 
 # Regressão ---------------------------------------------------------------
 fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='exponential')
