@@ -19,11 +19,7 @@ output: pdf_document
  - comorbi: Sim = comorbidades severas presentes; Não = ausente;
  - leucopenia: Sim = leucopenia presente; Não = ausente.
 
-
-```{r pressure, echo=FALSE, message=FALSE}
-# Leitura dos dados -------------------------------------------------------
-dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
-
+```{r, warning=FALSE}
 # Pacotes -----------------------------------------------------------------
 library(survival)
 library(muhaz)
@@ -36,6 +32,12 @@ library(parmsurvfit)
 library(pander)
 library(hnp)
 library(MASS)
+```
+
+
+```{r pressure, echo=FALSE, message=FALSE, error=FALSE}
+# Leitura dos dados -------------------------------------------------------
+dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
 
 #Funções -----------------------------------------------------------------
 # Função para Teste da Razão de Verossimilhanças (TRV)
