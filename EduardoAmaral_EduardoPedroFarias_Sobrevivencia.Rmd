@@ -22,6 +22,7 @@ require(pander)
 require(hnp)
 library(MASS)
 library(dplyr)
+library(gridExtra)
 
 #Funções -----------------------------------------------------------------
 # Função para Teste da Razão de Verossimilhanças (TRV)
@@ -81,42 +82,7 @@ legend('bottomleft', title='Leucopenia', c("Sim","Não"), col=1:3, lwd=2, bty='n
 
 km1; km2; km3; km4; km5
 
-# Regressão ---------------------------------------------------------------
-fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='exponential')
 
-fit2 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='weibull')
-
-fit3 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gamma')
-
-fit4 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
-
-fit5 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='llogis')
-
-fit6 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
-
-fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
-
-fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='genf')
-
-
-
-# fit1$AIC; fit2$AIC; fit3$AIC; fit4$AIC; fit5$AIC; fit6$AIC; fit7$AIC; fit8$AIC; fit9$AIC
-
-# Retirar sexo?
-
-
-aic_bic_valores <- data.frame(
-  Modelo = c("Exponential", "Weibull", "Gamma", "Log-Normal", "Log-Logistic", "Gompertz", "Generalized Gamma"),
-  AIC = c(AIC(fit1), AIC(fit2), AIC(fit3), AIC(fit4), AIC(fit5), AIC(fit6), AIC(fit7)),
-  BIC = c(BIC(fit1), BIC(fit2), BIC(fit3), BIC(fit4), BIC(fit5), BIC(fit6), BIC(fit7))
-)
-
-
-pander(aic_bic_valores)
-aic_bic_valores_ordenado <- arrange(aic_bic_valores, AIC)
-
-
-pander(aic_bic_valores_ordenado)
 
 
 
@@ -228,18 +194,7 @@ AIC(fit_COM_idade)
 
 
 ```{r}
-fit_gengamma <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
 
-fit_gompertz <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
-fit_lnorm <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
-
-AIC(fit_gengamma)
-AIC(fit_gompertz)
-AIC(fit_lnorm)
-
-fit_gengamma
-fit_gompertz
-fit_lnorm
 
 ```
 
@@ -306,9 +261,143 @@ hnp(r3, main='3', print.on=T, half=F, pch=16)
 hnp(r5, main='5', print.on=T, half=F, pch=16)
 ```
 
-teste
 
 
 
+# Regressão 
+
+
+```{r}
+# Regressão ---------------------------------------------------------------
+fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='exponential')
+
+fit2 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='weibull')
+
+fit3 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gamma')
+
+fit4 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
+
+fit5 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='llogis')
+
+fit6 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
+
+fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
+
+
+
+
+
+
+
+aic_bic_valores <- data.frame(
+  Modelo = c("Exponential", "Weibull", "Gamma", "Log-Normal", "Log-Logistic", "Gompertz", "Generalized Gamma"),
+  AIC = c(AIC(fit1), AIC(fit2), AIC(fit3), AIC(fit4), AIC(fit5), AIC(fit6), AIC(fit7)),
+  BIC = c(BIC(fit1), BIC(fit2), BIC(fit3), BIC(fit4), BIC(fit5), BIC(fit6), BIC(fit7))
+)
+
+#pander(aic_bic_valores)
+aic_bic_valores_ordenado <- arrange(aic_bic_valores, AIC)
+pander(aic_bic_valores_ordenado)
+```
+
+
+
+```{r}
+fit_gengamma <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
+
+fit_gengamma
+```
+
+
+
+# Diagnóstico
+
+```{r}
+fit_gengamma <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
+
+fit_gompertz <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
+fit_lnorm <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
+
+AIC(fit_gengamma)
+AIC(fit_gompertz)
+AIC(fit_lnorm)
+
+fit_gengamma
+fit_gompertz
+fit_lnorm
+```
+
+
+
+# Gráficos 
+
+```{r}
+for(i in 1:nrow(dados)) {
+  s2[i] <- summary(fit_gengamma, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
+  
+}
+set.seed("110116")
+a2 <- runif(length(s2), min=0, max=s2)
+r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
+qqnorm(r2, main='gengamma')     ; abline(0,1)
+
+hnp_fit_gengamma = hnp(r2, main='gengamma', half=F,print.on = T)  
+```
+
+```{r}
+for(i in 1:nrow(dados)) {
+  s2[i] <- summary(fit_gompertz, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
+  
+}
+set.seed("6545132")
+a2 <- runif(length(s2), min=0, max=s2)
+r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
+qqnorm(r2, main='fit_gompertz')     ; abline(0,1)
+
+hnp_fit_gompertz = hnp(r2, main='fit_gompertz', half=F,print.on = T)  
+```
+
+
+```{r}
+for(i in 1:nrow(dados)) {
+  s2[i] <- summary(fit_lnorm, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
+  
+}
+set.seed("426545132")
+a2 <- runif(length(s2), min=0, max=s2)
+r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
+qqnorm(r2, main='fit_lnorm')     ; abline(0,1)
+
+hnp_fit_lnorm = hnp(r2, main='fit_lnorm', half=F,print.on = T)  
+```
+
+
+Como os resíduos apresentaram um melhor ajuste à distribuição log-normal, essa será a escolha do modelo.
+
+
+# Interpretação 
+
+
+| Variável       | Estimativa (est) | Erro Padrão (se) | Exp da Estimativa (exp(est)) | Exp(L95%)  | Exp(U95%)  |
+|----------------|-----------------:|-----------------:|-----------------------------:|-----------:|-----------:|
+| idade          |           -0.027 |            0.006 |                        0.973 |      0.962 |      0.984 |
+| gptumor Hemato |            0.092 |            0.293 |                        1.096 |      0.617 |      1.947 |
+| gptumor Loco   |            1.502 |            0.234 |                        4.490 |      2.837 |      7.104 |
+| desnut Não     |            1.124 |            0.339 |                        3.077 |      1.582 |      5.986 |
+| comorbi Não    |            1.074 |            0.358 |                        2.926 |      1.450 |      5.907 |
+| leucopenia Não |            1.719 |            0.355 |                        5.581 |      2.784 |     11.189 |
+
+
+ - Idade: Para cada aumento de um ano na idade do paciente, observa-se uma redução de 2,7% no tempo mediano de sobrevida, já que a estimativa do efeito (exp(est)) é 0.973. O intervalo de confiança de 95% (IC 95%) para essa redução varia entre 3,8% (1 - 0.962) e 1,6% (1 - 0.984), indicando que estamos 95% confiantes de que a redução real no tempo mediano de sobrevida está entre esses valores para cada aumento de um ano na idade.
+
+ - gptumor Hemato: Pacientes com tumor hematológico têm um tempo mediano de sobrevida 1,096 vezes o da categoria de referência, mas essa estimativa não é estatisticamente significativa, pois o intervalo de confiança de 95% varia de 0,617 a 1,947, incluindo o valor 1.
+
+ - gptumor Loco: Pacientes com tumor sólido localizado têm um tempo mediano de sobrevida 4,49 vezes maior do que a categoria de referência. O intervalo de confiança de 95% indica que esse fator pode variar de 2,837 vezes a 7,104 vezes.
+
+ - desnut Não: Pacientes que não apresentam perda de peso recente têm um tempo mediano de sobrevida 3,077 vezes maior do que aqueles com perda de peso recente. O intervalo de confiança de 95% sugere que esse fator varia de 1,582 vezes a 5,986 vezes.
+
+ - comorbi Não: Pacientes sem comorbidades severas têm um tempo mediano de sobrevida 2,926 vezes maior do que aqueles com comorbidades severas. O intervalo de confiança de 95% mostra que esse aumento pode variar de 1,450 vezes a 5,907 vezes.
+
+ - leucopenia Não: Pacientes que não apresentam leucopenia têm um tempo mediano de sobrevida 5,581 vezes maior do que aqueles com leucopenia, com um intervalo de confiança de 95% variando de 2,784 vezes a 11,189 vezes.
 
 
