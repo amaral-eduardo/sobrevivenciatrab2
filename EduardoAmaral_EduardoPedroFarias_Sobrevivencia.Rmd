@@ -21,6 +21,7 @@ require(parmsurvfit)
 require(pander)
 require(hnp)
 library(MASS)
+library(dplyr)
 
 #Funções -----------------------------------------------------------------
 # Função para Teste da Razão de Verossimilhanças (TRV)
@@ -46,7 +47,12 @@ dados$sexo <- factor(dados$sexo, levels = c("Mas","Fem"))
 dados$desnut <- factor(dados$desnut, levels = c("Sim","Não"))
 dados$comorbi <- factor(dados$comorbi, levels = c("Sim","Não"))
 dados$leucopenia <- factor(dados$leucopenia, levels = c("Sim","Não"))
+
 dados$gptumor <- factor(dados$gptumor, levels = c("Loco", "Mtx", "Hemato"))
+
+
+
+dados$gptumor <- factor(dados$gptumor, levels = c( "Mtx","Loco", "Hemato"))
 
 summary(dados)
 
@@ -76,21 +82,22 @@ legend('bottomleft', title='Leucopenia', c("Sim","Não"), col=1:3, lwd=2, bty='n
 km1; km2; km3; km4; km5
 
 # Regressão ---------------------------------------------------------------
-fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='exponential')
+fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='exponential')
 
-fit2 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='weibull')
+fit2 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='weibull')
 
-fit3 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='gamma')
+fit3 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gamma')
 
-fit4 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='lnorm')
+fit4 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
 
-fit5 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='llogis')
+fit5 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='llogis')
 
-fit6 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='gompertz')
+fit6 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
 
-fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='gengamma')
+fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
 
-fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, data=dados, dist='genf')
+fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='genf')
+
 
 
 # fit1$AIC; fit2$AIC; fit3$AIC; fit4$AIC; fit5$AIC; fit6$AIC; fit7$AIC; fit8$AIC; fit9$AIC
@@ -99,12 +106,17 @@ fit8 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia, 
 
 
 aic_bic_valores <- data.frame(
-  Modelo = c("Exponential", "Weibull", "Gamma", "Log-Normal", "Log-Logistic", "Gompertz", "Generalized Gamma", "Generalized F"),
-  AIC = c(AIC(fit1), AIC(fit2), AIC(fit3), AIC(fit4), AIC(fit5), AIC(fit6), AIC(fit7), AIC(fit8)),
-  BIC = c(BIC(fit1), BIC(fit2), BIC(fit3), BIC(fit4), BIC(fit5), BIC(fit6), BIC(fit7), BIC(fit8))
+  Modelo = c("Exponential", "Weibull", "Gamma", "Log-Normal", "Log-Logistic", "Gompertz", "Generalized Gamma"),
+  AIC = c(AIC(fit1), AIC(fit2), AIC(fit3), AIC(fit4), AIC(fit5), AIC(fit6), AIC(fit7)),
+  BIC = c(BIC(fit1), BIC(fit2), BIC(fit3), BIC(fit4), BIC(fit5), BIC(fit6), BIC(fit7))
 )
 
+
 pander(aic_bic_valores)
+aic_bic_valores_ordenado <- arrange(aic_bic_valores, AIC)
+
+
+pander(aic_bic_valores_ordenado)
 
 
 
@@ -212,3 +224,28 @@ TRV(fit_SEM_sexo, fit_COM_idade)
 AIC(fit4)
 AIC(fit_COM_idade)
 ```
+
+
+```{r}
+fit_gengamma <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
+
+fit_gompertz <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
+fit_lnorm <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
+
+AIC(fit_gengamma)
+AIC(fit_gompertz)
+AIC(fit_lnorm)
+
+fit_gengamma
+fit_gompertz
+fit_lnorm
+
+```
+
+
+
+
+
+
+
+
