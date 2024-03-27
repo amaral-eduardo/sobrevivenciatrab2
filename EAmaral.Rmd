@@ -68,7 +68,7 @@ pander(head(dados))
 dados$idade_c <- ifelse(dados$idade <= 60, 0, 1)
 ```
 
-Dando continuidade no seminário anterior, apresentaremos agora um panorama maior, não apenas em função da variável $\textit{gptumor}$, mas ajustaremos um modelo considerando todas as variáveis presentes.
+Dando continuidade no seminário anterior, apresentaremos agora um panorama maior, não apenas em função da variável $\textit{gptumor}$, mas ajustaremos um modelo considerando todas as variáveis presentes. Com o objetivo de avaliar os fatores associados ao tempo de sobrevida após a internação, ocorrendo o óbito ou censura a direita / finalização do estudo.
 
 # Descritiva
 
