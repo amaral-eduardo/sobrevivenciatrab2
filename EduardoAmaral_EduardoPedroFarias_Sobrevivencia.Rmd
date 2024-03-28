@@ -3,13 +3,32 @@ title: ''
 output: pdf_document
 ---
 
-```{r}
-# Leitura dos dados -------------------------------------------------------
-dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
-head(dados)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,
+	cache=T
+)
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.align="center")
+```
 
-
+```{r, echo=FALSE, message=FALSE, error=FALSE, warning=FALSE}
 # Pacotes -----------------------------------------------------------------
+library(survival)
+library(muhaz)
+library(pander)
+library(flexsurv)
+library(hnp)
+library(ggplot2)
+library(survminer)
+library(parmsurvfit)
+library(pander)
+library(hnp)
+library(MASS)
+library(cuRe)
+
 require(survival)
 require(muhaz)
 require(pander)
@@ -23,6 +42,30 @@ require(hnp)
 library(MASS)
 library(dplyr)
 library(gridExtra)
+require(cuRe)
+```
+
+
+\newpage
+
+# Introdução
+
+  Revisitando estes dados que são proveninentes de um grupo de 862 pacientes com câncer internados na Unidade de Terapia Intensiva (UTI) do Instituto Nacional de Câncer (INCA), estudados por um período de 182 dias, publicado por Soares e cols. (2006). As variáveis presentes são:
+
+ - id: identificação do paciente;
+ - tempo: a partir do primeiro caso, acompanhado em dias;
+ - status: óbito = 1, censura = 0;
+ - sexo: Mas = masculino, Fem = feminino;
+ - idade: em anos completos;
+ - gptumor: 	tipo de tumor: Loco = sólido localizado; Mtx = metastático; Hemato = hematológico;
+ - desnut: Sim = perda de peso recente acima de 10% ou IMC < 18; Não: c.c.;
+ - comorbi: Sim = comorbidades severas presentes; Não = ausente;
+ - leucopenia: Sim = leucopenia presente; Não = ausente.
+
+
+```{r pressure, echo=FALSE, message=FALSE, error=FALSE}
+# Leitura dos dados -------------------------------------------------------
+dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
 
 #Funções -----------------------------------------------------------------
 # Função para Teste da Razão de Verossimilhanças (TRV)
@@ -48,218 +91,94 @@ dados$sexo <- factor(dados$sexo, levels = c("Mas","Fem"))
 dados$desnut <- factor(dados$desnut, levels = c("Sim","Não"))
 dados$comorbi <- factor(dados$comorbi, levels = c("Sim","Não"))
 dados$leucopenia <- factor(dados$leucopenia, levels = c("Sim","Não"))
+dados$gptumor <- factor(dados$gptumor, levels = c("Mtx","Loco", "Hemato"))
 
-dados$gptumor <- factor(dados$gptumor, levels = c("Loco", "Mtx", "Hemato"))
+pander(head(dados))
 
+dados$idade_c <- ifelse(dados$idade <= 60, 0, 1)
+```
 
+Dando continuidade no seminário anterior, apresentaremos agora um panorama maior, não apenas em função da variável $\textit{gptumor}$, mas ajustaremos um modelo considerando todas as variáveis presentes. Com o objetivo de avaliar os fatores associados ao tempo de sobrevida após a internação, ocorrendo o óbito ou censura a direita / finalização do estudo.
 
-dados$gptumor <- factor(dados$gptumor, levels = c( "Mtx","Loco", "Hemato"))
+# Descritiva com Kaplan-Meier
 
-summary(dados)
-
-str(dados)
-
-# Descritiva --------------------------------------------------------------
-km1 <- survfit(Surv(tempo, status)~gptumor, dados)
-plot(km1, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Tumores', c("Loco", "Mtx", "Hemato"), col=1:3, lwd=2, bty='n')
-
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5, echo=FALSE}
 km2 <- survfit(Surv(tempo, status)~sexo, dados)
-plot(km2, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:2)
-legend('bottomleft', title='Sexo', c("Mas","Fem"), col=1:2, lwd=2, bty='n')
+plot(km2, xlab='Tempo (em dias)', ylab='Prob de sobrevivencia', lwd=2, col=1:2, main='Sexo')
+legend('topright', c("Mas","Fem"), col=1:2, lwd=2, bty='n')
+
+km6 <- survfit(Surv(tempo, status)~idade_c, dados)
+plot(km6, xlab='Tempo (em dias)', ylab='Prob de sobrevivencia', lwd=2, col=1:2, main='Idade Categorica')
+legend('topright', c("<= 60","> 60"), col=1:2, lwd=2, bty='n')
+```
+
+
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5, echo=FALSE}
+km1 <- survfit(Surv(tempo, status)~gptumor, dados)
+plot(km1, xlab='Tempo (em dias)', ylab='Prob de sobrevivencia', lwd=2, col=1:3, main='Tumores')
+legend('topright', c("Sólido localizado", "Metastático", "Hematológico"), col=1:3, lwd=2, bty='n')
 
 km3 <- survfit(Surv(tempo, status)~desnut, dados)
-plot(km3, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Desnutricao', c("Sim","Não"), col=1:3, lwd=2, bty='n')
+plot(km3, xlab='Tempo (em dias)', ylab='Prob de sobrevivencia', lwd=2, col=1:2, main='Desnutrição')
+legend('topright', c("Sim","Não"), col=1:2, lwd=2, bty='n')
+```
 
+
+```{r, warning=FALSE, message=FALSE, fig.width=9, fig.height=5, echo=FALSE}
 km4 <- survfit(Surv(tempo, status)~comorbi, dados)
-plot(km4, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Comorbidade', c("Sim","Não"), col=1:3, lwd=2, bty='n')
+plot(km4, xlab='Tempo (em dias)', ylab='Prob de sobrevivencia', lwd=2, col=1:2, main='Comorbidade')
+legend('topright', c("Sim","Não"), col=1:2, lwd=2, bty='n')
 
 km5 <- survfit(Surv(tempo, status)~leucopenia, dados)
-plot(km5, xlab='Tempo', ylab='Prob de sobrevivencia', lwd=2, col=1:3)
-legend('bottomleft', title='Leucopenia', c("Sim","Não"), col=1:3, lwd=2, bty='n')
-
-km1; km2; km3; km4; km5
-
-
-
-
-
-
-s1 <- c() ; s2 <- c() 
-
-for(i in 1:nrow(dados)) {
-  s2[i] <- summary(fit4, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
-  if(i%%10==0) print(i)
-}
-
-
-
-a2 <- runif(length(s2), min=0, max=s2)
-r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
-
-
-qqnorm(r2, main='Weibull')     ; abline(0,1)
-
-
-
-hnp(r2, main='Weibull', half=F,print.on = T)    
-
-########################
-
-for(i in 1:nrow(dados)) {
-  s2[i] <- summary(fit6, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
-  if(i%%10==0) print(i)
-}
-
-
-
-a2 <- runif(length(s2), min=0, max=s2)
-r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
-
-
-qqnorm(r2, main='Weibull')     ; abline(0,1)
-
-
-
-hnp(r2, main='Weibull', half=F,print.on = T)  
- 
-
-
-
-### teste variaveis
-fit_nulo = flexsurvreg(Surv(tempo, status)~ 1, data=dados, dist='lnorm')
-
-fit_SEM_sexo = flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia, data=dados, dist='lnorm')
-fit_SEM_gptumor = flexsurvreg(Surv(tempo, status)~gptumor+sexo+comorbi+leucopenia, data=dados, dist='lnorm')
-fit_SEM_comorbi = flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+leucopenia, data=dados, dist='lnorm')
-fit_SEM_desnut = flexsurvreg(Surv(tempo, status)~gptumor+sexo+comorbi+leucopenia, data=dados, dist='lnorm')
-fit_SEM_leucopenia = flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi, data=dados, dist='lnorm')
-
-TRV(fit_SEM_sexo, fit4) 
-# tirar sexo
-# TRV gl         p
-# [1,] 1.964037  1 0.1610822
-
-TRV(fit_SEM_gptumor, fit4) # gptumor IMPORTANTE
-
-TRV(fit_SEM_comorbi, fit4) # comorbi IMPORTANTE
-
-TRV(fit_SEM_desnut, fit4) # desnut IMPORTANTE
-
-TRV(fit_SEM_leucopenia, fit4) # leucopenia IMPORTANTE
-
-
-####fit_SEM_sexo é o melhor
-fit_SEM_gptumor.2 = flexsurvreg(Surv(tempo, status)~desnut+comorbi+leucopenia, data=dados, dist='lnorm')
-fit_SEM_comorbi.2 = flexsurvreg(Surv(tempo, status)~gptumor+desnut+leucopenia, data=dados, dist='lnorm')
-fit_SEM_desnut.2 = flexsurvreg(Surv(tempo, status)~gptumor+comorbi+leucopenia, data=dados, dist='lnorm')
-fit_SEM_leucopenia.2 = flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi, data=dados, dist='lnorm')
-
-        
-TRV(fit_SEM_gptumor.2, fit_SEM_sexo)
-TRV(fit_SEM_comorbi.2, fit_SEM_sexo)
-TRV(fit_SEM_desnut.2, fit_SEM_sexo)
-TRV(fit_SEM_leucopenia.2, fit_SEM_sexo)
-
-
-
-##### fit_SEM_sexo é o melhor
-fit_APENAS_gptumor = flexsurvreg(Surv(tempo, status)~gptumor, data=dados, dist='lnorm')
-fit_APENAS_comorbi = flexsurvreg(Surv(tempo, status)~comorbi, data=dados, dist='lnorm')
-fit_APENAS_desnut = flexsurvreg(Surv(tempo, status)~desnut, data=dados, dist='lnorm')
-fit_APENAS_leucopenia = flexsurvreg(Surv(tempo, status)~leucopenia, data=dados, dist='lnorm')
-
-
-TRV(fit_APENAS_gptumor, fit_SEM_sexo)
-TRV(fit_APENAS_comorbi, fit_SEM_sexo)
-TRV(fit_APENAS_desnut, fit_SEM_sexo)
-TRV(fit_APENAS_leucopenia, fit_SEM_sexo)
-
-
-##### fit_COM_idade é o melhor, sem sexo
-
-fit_SEM_sexo = flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia, data=dados, dist='lnorm')
-fit_COM_idade = flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
-
-TRV(fit_SEM_sexo, fit_COM_idade)
-
-
-
-AIC(fit4)
-AIC(fit_COM_idade)
-
+plot(km5, xlab='Tempo (em dias)', ylab='Prob de sobrevivencia', lwd=2, col=1:2, main='Leucopenia')
+legend('topright', c("Sim","Não"), col=1:2, lwd=2, bty='n')
 ```
 
 
-```{r}
+\newpage
 
+De forma geral, podemos ver que os grupos possuem uma diferença, ficando apenas a variável Sexo e Idade categorizada como sendo 'próximas', mas para termos uma base mais estatistica, apresento um teste para comparar os grupos dentro de cada variável.
 
+# Testes de log rank
+
+O teste log-rank é uma análise estatística amplamente utilizada para comparar a sobrevivência de grupos. O valor de p do teste log-rank indica se há uma diferença significativa entre os grupos em estudo, tendo como hipótese estatística:
+
+$$
+\begin{cases}
+H_0 : \text{Os grupos são iguais;} \\
+H_1 : \text{Os grupos não são iguais.}
+\end{cases}
+$$
+
+```{r, echo=FALSE}
+Psexo <- survdiff(Surv(tempo, status)~sexo, dados)$p
+Pgptumor <- survdiff(Surv(tempo, status)~gptumor, dados)$p
+Pdesnut <- survdiff(Surv(tempo, status)~desnut, dados)$p
+Pcomorbi <- survdiff(Surv(tempo, status)~comorbi, dados)$p
+Pleucopenia <- survdiff(Surv(tempo, status)~leucopenia, dados)$p
+Pidade_c <- survdiff(Surv(tempo, status)~idade_c, dados)$p
+
+P_valor <- c(Psexo, Pidade_c, Pgptumor, Pdesnut, Pcomorbi, Pleucopenia)
+Variaveis <- c('sexo', 'idade_c', 'gptumor', 'desnut', 'comorbi', 'leucopenia')
+
+pander(data.frame(Variaveis, P_valor))
 ```
 
-```{r}
-teste = fit.cure.model(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade,
-                       data=dados, 
-                       dist='lognormal', 
-                       formula.surv=list(~gptumor), 
-                       type='mixture', 
-                       link='logit')
+Sendo assim, podemos a um nivel de confiança de $5\%$ que o sexo masculino e o feminino não diferem quando se trata do tempo de sobrevida do paciente, sobre as outras variáveis, temos que há uma diferença significativa entre os níveis interno de cada uma.
+
+\newpage
 
 
-AIC(teste)
-summary(teste)
-
-table(dados$gptumor)
-```
-
-```{r}
-
-#“surv”, “curerate”, “probcure”, “survuncured”, “hazarduncured”, “cumhazuncured”, “densityuncured”, “failuncured”, “oddsuncured”, “loghazarduncured”, “hazard”, “density”, “fail”, “loghazard”, “odds”, “cumhaz”
-predict(teste, newdata=data.frame(group=c('Mtx', 'Loco', 'Hemato')), type='curerate')
-
-dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
-
-teste = fit.cure.model(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade,
-                       data=dados, 
-                       dist='lognormal', 
-                       formula.surv=list(~gptumor), 
-                       type='mixture', 
-                       link='logit')
-
-summary(teste)
-
-s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c()
-
-for(i in 1:nrow(dados)) {
-  # Incluir todas as variáveis necessárias para a previsão
-  new_data <- data.frame(
-    gptumor = dados$gptumor[i],
-    desnut = dados$desnut[i],
-    comorbi = dados$comorbi[i],
-    leucopenia = dados$leucopenia[i],
-    idade = dados$idade[i]
-  )
-  
-  s1[i] <- predict(teste, newdata=new_data, time=dados$tempo[i])[[1]]$Estimate
-  #if(i %% 10 == 0) print(i)
-}
-
-a1 <- runif(length(s1), min=0, max=s1)
-r1 <- ifelse(dados$status==1, qnorm(s1), qnorm(a1))
-
-1-exp(-0.0269800)
+fit7 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
 
 
 
-require(hnp)
-X11()
-par(mfrow=c(2,2))
-hnp(r1, main='1', print.on=T, half=F, pch=16)
-hnp(r2, main='2', print.on=T, half=F, pch=16)    
-hnp(r3, main='3', print.on=T, half=F, pch=16)
-hnp(r5, main='5', print.on=T, half=F, pch=16)
-```
+
+
+
+
+
+
 
 
 
@@ -267,7 +186,7 @@ hnp(r5, main='5', print.on=T, half=F, pch=16)
 # Regressão 
 
 
-```{r}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 # Regressão ---------------------------------------------------------------
 fit1 <- flexsurvreg(Surv(tempo, status)~gptumor+sexo+desnut+comorbi+leucopenia+idade, data=dados, dist='exponential')
 
@@ -303,35 +222,42 @@ pander(aic_bic_valores_ordenado)
 
 
 ```{r}
+
+pander(aic_bic_valores_ordenado)
+
 fit_gengamma <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
 
-fit_gengamma
+#fit_gengamma
 ```
 
 
 
 # Diagnóstico
 
-```{r}
+```{r }
 fit_gengamma <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gengamma')
 
 fit_gompertz <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='gompertz')
+
 fit_lnorm <- flexsurvreg(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, data=dados, dist='lnorm')
 
-AIC(fit_gengamma)
-AIC(fit_gompertz)
-AIC(fit_lnorm)
-
-fit_gengamma
-fit_gompertz
-fit_lnorm
+# AIC(fit_gengamma)
+# AIC(fit_gompertz)
+# AIC(fit_lnorm)
+# 
+# fit_gengamma
+# fit_gompertz
+# fit_lnorm
 ```
+
 
 
 
 # Gráficos 
 
-```{r}
+```{r }
+s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c()
+
 for(i in 1:nrow(dados)) {
   s2[i] <- summary(fit_gengamma, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
   
@@ -339,12 +265,14 @@ for(i in 1:nrow(dados)) {
 set.seed("110116")
 a2 <- runif(length(s2), min=0, max=s2)
 r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
-qqnorm(r2, main='gengamma')     ; abline(0,1)
+#qqnorm(r2, main='gengamma')     ; abline(0,1)
 
-hnp_fit_gengamma = hnp(r2, main='gengamma', half=F,print.on = T)  
+hnp(r2, main='gengamma', half=F,print.on = T)  
 ```
 
-```{r}
+```{r }
+s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c()
+
 for(i in 1:nrow(dados)) {
   s2[i] <- summary(fit_gompertz, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
   
@@ -352,13 +280,15 @@ for(i in 1:nrow(dados)) {
 set.seed("6545132")
 a2 <- runif(length(s2), min=0, max=s2)
 r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
-qqnorm(r2, main='fit_gompertz')     ; abline(0,1)
+#qqnorm(r2, main='fit_gompertz')     ; abline(0,1)
 
-hnp_fit_gompertz = hnp(r2, main='fit_gompertz', half=F,print.on = T)  
+hnp(r2, main='fit_gompertz', half=F,print.on = T)  
 ```
 
 
-```{r}
+```{r }
+s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c()
+
 for(i in 1:nrow(dados)) {
   s2[i] <- summary(fit_lnorm, type='survival', t=dados$tempo[i], newdata=dados[i,], tidy=T)$est
   
@@ -366,14 +296,15 @@ for(i in 1:nrow(dados)) {
 set.seed("426545132")
 a2 <- runif(length(s2), min=0, max=s2)
 r2 <- ifelse(dados$status==1, qnorm(s2), qnorm(a2))
-qqnorm(r2, main='fit_lnorm')     ; abline(0,1)
+#qqnorm(r2, main='fit_lnorm')     ; abline(0,1)
 
-hnp_fit_lnorm = hnp(r2, main='fit_lnorm', half=F,print.on = T)  
+hnp(r2, main='fit_lnorm', half=F,print.on = T)  
 ```
 
 
 Como os resíduos apresentaram um melhor ajuste à distribuição log-normal, essa será a escolha do modelo.
 
+\newpage
 
 # Interpretação 
 
@@ -401,3 +332,48 @@ Como os resíduos apresentaram um melhor ajuste à distribuição log-normal, es
  - leucopenia Não: Pacientes que não apresentam leucopenia têm um tempo mediano de sobrevida 5,581 vezes maior do que aqueles com leucopenia, com um intervalo de confiança de 95% variando de 2,784 vezes a 11,189 vezes.
 
 
+
+
+<!-- teste -->
+
+<!-- ```{r} -->
+
+<!-- #“surv”, “curerate”, “probcure”, “survuncured”, “hazarduncured”, “cumhazuncured”, “densityuncured”, “failuncured”, “oddsuncured”, “loghazarduncured”, “hazard”, “density”, “fail”, “loghazard”, “odds”, “cumhaz” -->
+
+<!-- # predict(teste, newdata=data.frame(group=c('Mtx', 'Loco', 'Hemato')), type='curerate') -->
+
+<!-- # dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE) -->
+
+<!-- # teste = fit.cure.model(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade, -->
+<!--                        # data=dados,  -->
+<!--                        # dist='lognormal',  -->
+<!--                        # formula.surv=list(~gptumor),  -->
+<!--                        # type='mixture',  -->
+<!--                        # link='logit') -->
+
+<!-- # summary(teste) -->
+
+<!-- s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c() -->
+
+<!-- for(i in 1:nrow(dados)) { -->
+<!--   # Incluir todas as variáveis necessárias para a previsão -->
+<!--   new_data <- data.frame( -->
+<!--     gptumor = dados$gptumor[i], -->
+<!--     desnut = dados$desnut[i], -->
+<!--     comorbi = dados$comorbi[i], -->
+<!--     leucopenia = dados$leucopenia[i], -->
+<!--     idade = dados$idade[i] -->
+<!--   ) -->
+
+<!--   s1[i] <- predict(teste, newdata=new_data, time=dados$tempo[i])[[1]]$Estimate -->
+<!--   #if(i %% 10 == 0) print(i) -->
+<!-- } -->
+
+<!-- a1 <- runif(length(s1), min=0, max=s1) -->
+<!-- r1 <- ifelse(dados$status==1, qnorm(s1), qnorm(a1)) -->
+
+
+<!-- # X()11 -->
+<!-- # hnp(r1, main='1', print.on=T, half=F, pch=16) -->
+
+<!-- ``` -->

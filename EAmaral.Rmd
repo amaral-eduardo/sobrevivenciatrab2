@@ -16,6 +16,22 @@ library(parmsurvfit)
 library(pander)
 library(hnp)
 library(MASS)
+library(cuRe)
+
+require(survival)
+require(muhaz)
+require(pander)
+require(flexsurv)
+require(hnp)
+require(ggplot2)
+require(survminer)
+require(parmsurvfit)
+require(pander)
+require(hnp)
+library(MASS)
+library(dplyr)
+library(gridExtra)
+require(cuRe)
 ```
 
 
@@ -140,3 +156,46 @@ pander(data.frame(Variaveis, P_valor))
 Sendo assim, podemos a um nivel de confiança de $5\%$ que o sexo masculino e o feminino não diferem quando se trata do tempo de sobrevida do paciente, sobre as outras variáveis, temos que há uma diferença significativa entre os níveis interno de cada uma.
 
 
+teste
+
+```{r}
+
+#“surv”, “curerate”, “probcure”, “survuncured”, “hazarduncured”, “cumhazuncured”, “densityuncured”, “failuncured”, “oddsuncured”, “loghazarduncured”, “hazard”, “density”, “fail”, “loghazard”, “odds”, “cumhaz”
+
+# predict(teste, newdata=data.frame(gptumor=c('Mtx', 'Loco', 'Hemato')), type='curerate')
+
+dados <- read.table("http://sobrevida.fiocruz.br/dados/ctinca.dat", header = TRUE)
+
+teste = fit.cure.model(Surv(tempo, status)~gptumor+desnut+comorbi+leucopenia+idade,
+                       data=dados,
+                       dist='lognormal',
+                       formula.surv=list(~gptumor),
+                       type='mixture',
+                       link='logit')
+
+summary(teste)
+
+s1 <- c() ; s2 <- c() ; s3 <- c() ; s5 <- c()
+
+for(i in 1:nrow(dados)) {
+  # Incluir todas as variáveis necessárias para a previsão
+  new_data <- data.frame(
+    gptumor = dados$gptumor[i],
+    desnut = dados$desnut[i],
+    comorbi = dados$comorbi[i],
+    leucopenia = dados$leucopenia[i],
+    idade = dados$idade[i]
+  )
+
+  s1[i] <- predict(teste, newdata=new_data, time=dados$tempo[i])[[1]]$Estimate
+  #if(i %% 10 == 0) print(i)
+}
+
+a1 <- runif(length(s1), min=0, max=s1)
+r1 <- ifelse(dados$status==1, qnorm(s1), qnorm(a1))
+
+
+# X()11
+hnp(r1, main='1', print.on=T, half=F, pch=16)
+
+```
